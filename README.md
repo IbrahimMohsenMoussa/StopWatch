@@ -1,6 +1,7 @@
 
 # Stopwatch Simulation using AVR Microcontroller
 
+code will be avaliable after Tuesday 17/9/2024 
 This project is a **stopwatch** implemented on an AVR microcontroller, simulated in **Proteus**. It allows the user to control the stopwatch's functionality, including **counting up**, **counting down**, **pausing/resuming**, and adjusting time. The display is handled using a **seven-segment display**, and pushbuttons provide user interaction.
 
 ## Features
