@@ -1,4 +1,3 @@
-
 #include "stopwatch.h"
 volatile uint8_t g_time[TIME_SIZE] = { MIN_mins_sec };
 volatile uint8_t g_interrupt_0_flag_reset = FALSE;
@@ -16,24 +15,21 @@ struct pushbutton min_inc_button;
 struct pushbutton min_dec_button;
 struct pushbutton hour_inc_button;
 struct pushbutton hour_dec_button;
-struct multi_7_segment display ;
+struct multi_7_segment display;
 
 int main() {
 
 	Timer1_Init_CTC_Mode(COMP_VALUE_ONE_SEC_TIMER1);
 	Timer0_Init_CTC_Mode(COMP_VALUE_ONE_mSEC_TIMER0);
 
-
 	GPIO_Init();
 	Init_display();
 	Interrupt_INIT();
 	Init_Stopwatch_Buttons();
 
-	 StopWatch_Reset_time();
-
+	StopWatch_Reset_time();
 
 	for (;;) {
-
 
 		Handle_Button_Presses();
 		Handle_End_Count_Down();
@@ -83,7 +79,7 @@ void Timer1_Counter_DEC() {
 }
 
 // resets time in time_Calculator(uint8_t*) function
-void  StopWatch_Reset_time() {
+void StopWatch_Reset_time() {
 	TCNT0 = MIN_HOURS;
 	g_time[HOURS] = MIN_HOURS;
 	g_time[MINS] = MIN_mins_sec;
@@ -101,7 +97,6 @@ void Display_time() {
 }
 void GPIO_Init() {
 
-
 	GPIO_SetPinDirection('D', BUZZER_PIN, OUTPUT);
 
 	GPIO_SetPinDirection('A', ON_OFF_LED, OUTPUT);
@@ -110,7 +105,6 @@ void GPIO_Init() {
 	GPIO_SetPinDirection('D', PAUSE_D, INPUT_PULLUP);
 
 //PORTB |= (1 << PB7);
-
 
 }
 void Interrupt_INIT() {
@@ -132,7 +126,7 @@ void Init_Stopwatch_Buttons() {
 
 void Handle_Button_Presses() {
 	if (g_interrupt_0_flag_reset) {
-		 StopWatch_Reset_time();
+		StopWatch_Reset_time();
 		g_interrupt_0_flag_reset = FALSE;
 
 	} else if (g_interrupt_1_flag_pause) {
@@ -156,32 +150,7 @@ void Handle_Button_Presses() {
 		}
 
 	} else if (Pushbutton_Pressed(&mode_button)) {
-		if (stateMachine == COUNT_UP) {
-			stateMachine = COUNT_DOWN;
-			set_CallBack(Timer1_Counter_DEC);
-			GPIO_WritePin('D', COUNT_UP_LED_D, LOW);
-			GPIO_WritePin('D', COUNT_DOWN_LED_D, HIGH);
-		} else if (stateMachine == COUNT_DOWN) {
-			stateMachine = COUNT_UP;
-			set_CallBack(Timer1_Counter_INC);
-			GPIO_WritePin('D', COUNT_UP_LED_D, HIGH);
-			GPIO_WritePin('D', COUNT_DOWN_LED_D, LOW);
-		} else if (stateMachine == PAUSE) {
-			if (previousState == COUNT_UP) {
-				previousState = COUNT_DOWN;
-				set_CallBack(Timer1_Counter_DEC);
-				GPIO_WritePin('D', COUNT_UP_LED_D, LOW);
-				GPIO_WritePin('D', COUNT_DOWN_LED_D, HIGH);
-
-			} else if (previousState == COUNT_DOWN) {
-				previousState = COUNT_UP;
-				set_CallBack(Timer1_Counter_INC);
-				GPIO_WritePin('D', COUNT_UP_LED_D, HIGH);
-				GPIO_WritePin('D', COUNT_DOWN_LED_D, LOW);
-
-			}
-
-		}
+		Mode_Switching();
 	}
 
 }
@@ -289,15 +258,51 @@ void StopWatch_StateMachine() {
 	}
 
 }
-void Init_display(){
-display._7_segment_num=NUM_7_SEGMETS;
-display.data_bitMask=_7_SEGMENT_DATA_BIT_MASK;
-display.multi_bitMask=_7_SEGMENT_MULTI_BIT_MASK;
-display.data_ddr=&DDRC;
-display.multi_ddr=&DDRA;
-display.multi_port=&PORTA;
-display.data_port=&PORTC;
-display.decimal_pin=DECIMAL_POINT;
-display.decimal_port='D';
-Seven_Seg_INIT(&display);
+void Init_display() {
+	display._7_segment_num = NUM_7_SEGMETS;
+	display.data_bitMask = _7_SEGMENT_DATA_BIT_MASK;
+	display.multi_bitMask = _7_SEGMENT_MULTI_BIT_MASK;
+	display.data_ddr = &DDRC;
+	display.multi_ddr = &DDRA;
+	display.multi_port = &PORTA;
+	display.data_port = &PORTC;
+	display.decimal_pin = DECIMAL_POINT;
+	display.decimal_port = 'D';
+	Seven_Seg_INIT(&display);
+}
+void Mode_Switching(){
+
+	if (stateMachine == COUNT_UP) {
+		stateMachine = COUNT_DOWN;
+		set_CallBack(Timer1_Counter_DEC);
+		GPIO_WritePin('D', COUNT_UP_LED_D, LOW);
+		GPIO_WritePin('D', COUNT_DOWN_LED_D, HIGH);
+	} else if (stateMachine == COUNT_DOWN) {
+		stateMachine = COUNT_UP;
+		set_CallBack(Timer1_Counter_INC);
+		GPIO_WritePin('D', COUNT_UP_LED_D, HIGH);
+		GPIO_WritePin('D', COUNT_DOWN_LED_D, LOW);
+	} else if (stateMachine == PAUSE && g_end_countdown_flag) {
+		g_end_countdown_flag=0;
+		stateMachine = COUNT_UP;
+		Timer1_ON();
+		set_CallBack(Timer1_Counter_INC);
+		GPIO_WritePin('D', COUNT_UP_LED_D, HIGH);
+		GPIO_WritePin('D', COUNT_DOWN_LED_D, LOW);
+	} else if (stateMachine == PAUSE) {
+		if (previousState == COUNT_UP) {
+			previousState = COUNT_DOWN;
+			set_CallBack(Timer1_Counter_DEC);
+			GPIO_WritePin('D', COUNT_UP_LED_D, LOW);
+			GPIO_WritePin('D', COUNT_DOWN_LED_D, HIGH);
+
+		} else if (previousState == COUNT_DOWN) {
+			previousState = COUNT_UP;
+			set_CallBack(Timer1_Counter_INC);
+			GPIO_WritePin('D', COUNT_UP_LED_D, HIGH);
+			GPIO_WritePin('D', COUNT_DOWN_LED_D, LOW);
+
+		}
+
+	}
 }
