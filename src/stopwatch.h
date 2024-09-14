@@ -124,7 +124,8 @@ void StopWatch_Adjust_Time();
  * @brief Handles the stopWatch stateMachine switching between state COUNT_UP COUNT_DOWN and PAUSE
  * */
 void StopWatch_StateMachine();
-//resets time in the global g_time [] array
+/*@brief handle all the cases for changing the stopwatch  mode  */
+void Mode_Switching();
 
 typedef enum {
 
